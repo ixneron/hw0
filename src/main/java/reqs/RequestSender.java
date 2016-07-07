@@ -3,6 +3,8 @@ package reqs;
 import generated.Card;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.util.ByteArrayOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,8 @@ import javax.xml.bind.Marshaller;
 
 @Component
 public class RequestSender implements Runnable {
+
+    private static Logger logger = LoggerFactory.getLogger(RequestSender.class);
 
     @Autowired
     private ActiveMQConnectionFactory mqConnectionFactory;
@@ -29,6 +33,8 @@ public class RequestSender implements Runnable {
             topicConnection.start();
             TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
 
+            logger.info("созданы sender соеденинения");
+
             sendViaQueue(queueSession);
             sendViaTopic(topicSession);
 
@@ -37,12 +43,16 @@ public class RequestSender implements Runnable {
             topicSession.close();
             topicConnection.close();
 
+            logger.info("закрываем sender оединения...");
+
         } catch (JMSException | JAXBException e) {
             e.printStackTrace();
         }
     }
 
     public byte[] convertXmlMessageToBytes () throws JAXBException {
+
+        logger.info("конвертируем сообщение в байты ...");
 
         Card card = new Card();
         card.setCardOwner("Vasiliy");
@@ -69,6 +79,8 @@ public class RequestSender implements Runnable {
         bytesMessage.writeBytes(convertXmlMessageToBytes());
 
         messageSender.send(bytesMessage);
+
+        logger.info("отправляем сообщение в очередь ...");
     }
 
     public void sendViaTopic (TopicSession session) throws JMSException, JAXBException {
@@ -80,5 +92,7 @@ public class RequestSender implements Runnable {
         bytesMessage.writeBytes(convertXmlMessageToBytes());
 
         publisher.send(bytesMessage);
+
+        logger.info("отправляем сообщение в топик ...");
     }
 }

@@ -36,7 +36,6 @@ public class RequestReceiver implements Runnable {
             queueConnection.start();
             QueueSession queueSession = queueConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 
-
             TopicConnection topicConnection = mqConnectionFactory.createTopicConnection();
             topicConnection.start();
             TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -44,11 +43,10 @@ public class RequestReceiver implements Runnable {
             topicConnection.start();
             TopicSession topicSession2 = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            logger.info("созданы соединения на получение сообщений");
+            logger.info("созданы receive соединения");
 
             receiveFromTopic(topicSession,topicSession2);
             receiveFromQueue(queueSession);
-
 
             queueSession.close();
             queueConnection.close();
@@ -57,7 +55,8 @@ public class RequestReceiver implements Runnable {
             topicSession2.close();
             topicConnection2.close();
 
-            logger.info("receive соединения закрыты");
+            logger.info("закрываем receive соединения ...");
+
         } catch (JMSException | JAXBException e) {
             e.printStackTrace();
         }
@@ -69,8 +68,10 @@ public class RequestReceiver implements Runnable {
         MessageConsumer receiver = queueSession.createConsumer(destination);
 
         Message message = receiver.receive(1000);
-        upgradeMessage(message);
-        System.out.println("очередник");
+        logger.info("читаем из очереди");
+
+        transformMessage(message);
+
     }
 
     public void receiveFromTopic (TopicSession topicSession, TopicSession topicSession2) throws JMSException, JAXBException {
@@ -80,15 +81,19 @@ public class RequestReceiver implements Runnable {
         TopicSubscriber subscriber1 = topicSession2.createSubscriber(topic);
 
         Message message = subscriber.receive();
-        upgradeMessage(message);
-        System.out.println("первый саб");
+        logger.info("первый подписчик читает из топика");
+        transformMessage(message);
+
         Message message2 = subscriber1.receive();
-        upgradeMessage(message2);
-        System.out.println("второй саб");
+        logger.info("второй подписчик читает из топика");
+        transformMessage(message2);
+
 
     }
 
     private void convertBytesToXmlMessage(byte[] content) throws JAXBException {
+
+        logger.info("конвертируем сообщение в xmlMessage ...");
 
         JAXBContext context = JAXBContext.newInstance(Card.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -100,6 +105,8 @@ public class RequestReceiver implements Runnable {
     }
 
     private void validateMessage (Card card) throws JAXBException {
+
+        logger.info("валидация сообщения ...");
 
         JAXBContext context = JAXBContext.newInstance(Card.class);
         JAXBSource source = new JAXBSource(context,card);
@@ -121,7 +128,7 @@ public class RequestReceiver implements Runnable {
 
     }
 
-    private void upgradeMessage(Message message) throws JMSException, JAXBException {
+    private void transformMessage(Message message) throws JMSException, JAXBException {
 
         if (message instanceof BytesMessage){
             BytesMessage bytesMessage = (BytesMessage) message;
