@@ -7,6 +7,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 
 
 public class Test {
@@ -15,8 +16,10 @@ public class Test {
     private static DefaultMessageListenerContainer topicListenerNonDur;
 
     private static Logger logger = LoggerFactory.getLogger(Test.class);
+    private static ProcessBuilder processBuilderStart = new ProcessBuilder("cmd", "/C","start","C:/start.bat");
+    private static ProcessBuilder processBuilderStop = new ProcessBuilder("cmd", "/C","start","C:/stop.bat");
 
-    public static void main(String[] args) throws JAXBException, InterruptedException {
+    public static void main(String[] args) throws JAXBException, InterruptedException, IOException {
 
         ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("appCtx.xml");
         MessageSenderViaQueue messageSenderViaQueue = ctx.getBean(MessageSenderViaQueue.class);
@@ -31,13 +34,13 @@ public class Test {
 
         testProducerAndConsumer(messageSenderViaQueue, messageSenderViaTopic);
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
         logger.info("==========================================================================================");
         logger.info("тестируем второй сценарий (отправка в топик, когда клиенты оффлайн (потеря сообщений)");
         testOfflineConsumer(messageSenderViaTopic, ctx);
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
         logger.info("==========================================================================================");
         logger.info("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился");
@@ -63,7 +66,7 @@ public class Test {
         messageSenderViaTopic.sendRequestToActivation(topicCard);
     }
 
-    public static void testDurableConsumer (MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) {
+    public static void testDurableConsumer (MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) throws InterruptedException, IOException {
         Card topicCard = new Card();
         topicCard.setCardOwner("Alena - Topic");
         topicCard.setCardStatus("N");
@@ -74,26 +77,28 @@ public class Test {
         topicListenerNonDur.stop();
         logger.info("отключаем клиентов");
 
-        try {
             Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         logger.info("отправляем сообщение в топик");
+        //messageSenderViaTopic.sendRequestToActivation(topicCard);
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        logger.info("перезапускаем ActiveMQ и стартуем слушателей, 2 из 3 подписчиков получат сообщения");
+        processBuilderStop.start();
+        Thread.sleep(3000);
 
-        logger.info("подключаем клиентов  и получаем сохраненные сообщения");
+        Runtime.getRuntime().exec("taskkill /f /im cmd.exe") ;
+        Thread.sleep(3000);
+
+        processBuilderStart.start();
+        logger.info("запускается ActiveMQ ...");
+        Thread.sleep(7000);
+
         topicListenerSecond.start();
         topicListenerFirst.start();
+        topicListenerNonDur.start();
     }
 
-    public static void testOfflineConsumer(MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) {
+    public static void testOfflineConsumer(MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) throws InterruptedException, IOException {
         Card topicCard = new Card();
         topicCard.setCardOwner("Sasha - Topic");
         topicCard.setCardStatus("N");
@@ -107,8 +112,17 @@ public class Test {
         logger.info("отправляем сообщение");
         messageSenderViaTopic.sendRequestToActivation(topicCard);
 
+            Thread.sleep(1000);
+
+        processBuilderStop.start();
+        Thread.sleep(3000);
+        Runtime.getRuntime().exec("taskkill /f /im cmd.exe") ;
+        Thread.sleep(3000);
+        processBuilderStart.start();
+        logger.info("перезапускаем ActiveMQ и подключаем клиентов");
+        Thread.sleep(7000);
 
         topicListenerNonDur.start();
-        logger.info("подключаем клиентов и видим, что сообщения не приходят");
+        logger.info("вновь подключенные подписчики не получили сообщений");
     }
 }

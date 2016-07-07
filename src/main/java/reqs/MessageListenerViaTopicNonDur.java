@@ -10,7 +10,7 @@ import javax.jms.MessageListener;
 
 public class MessageListenerViaTopicNonDur implements MessageListener {
 
-    private static Logger logger = LoggerFactory.getLogger(MessageListenerViaTopicFirstClient.class);
+    private static Logger logger = LoggerFactory.getLogger(MessageListenerViaTopicNonDur.class);
 
     @Autowired
     private Jaxb2Marshaller marshaller;
