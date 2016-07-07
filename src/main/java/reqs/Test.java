@@ -19,6 +19,7 @@ public class Test {
 
         logger.info("поднялся контекст");
 
+
         Thread t = new Thread(requestSender);
         Thread r = new Thread(requestReceiver);
 
