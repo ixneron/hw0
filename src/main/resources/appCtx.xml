@@ -11,8 +11,80 @@
     <context:component-scan base-package="reqs"/>
 
 
-    <bean id="AMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+    <bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
         <constructor-arg index="0" value="tcp://192.168.148.130:61616"/>
+    </bean>
+
+    <bean id="jmsQueueTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="receiveTimeout" value="1000"/>
+        <property name="defaultDestination" ref="destinationQueue"/>
+    </bean>
+
+    <bean id="jmsTopicTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="receiveTimeout" value="1000"/>
+        <property name="pubSubDomain" value="true"/>
+        <property name="defaultDestination" ref="destinationTopic"/>
+    </bean>
+
+    <bean id="destinationQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg value="myQueue"/>
+    </bean>
+    <bean id="destinationTopic" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg value="myTopic"/>
+    </bean>
+
+    <bean id="listenerViaQueue" class="reqs.MessageListenerViaQueue"/>
+    <bean id="listenerViaTopicFirstClient" class="reqs.MessageListenerViaTopicFirstClient"/>
+    <bean id="listenerViaTopicSecondClient" class="reqs.MessageListenerViaTopicSecondClient"/>
+    <bean id="listenerViaTopicNonDur" class="reqs.MessageListenerViaTopicNonDur"/>
+
+    <bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="destination" ref="destinationQueue"/>
+        <property name="messageListener" ref="listenerViaQueue"/>
+    </bean>
+
+    <bean id="topicListenerNonDur" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="destination" ref="destinationTopic"/>
+        <property name="pubSubDomain" value="true"/>
+        <property name="messageListener" ref="listenerViaTopicNonDur"/>
+    </bean>
+
+    <bean id="topicListenerFirst" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="destination" ref="destinationTopic"/>
+        <property name="pubSubDomain" value="true"/>
+        <property name="messageListener" ref="listenerViaTopicFirstClient"/>
+        <property name="subscriptionDurable" value="true"/>
+        <property name="durableSubscriptionName" value="1005002"/>
+        <property name="clientId" value="1005011"/>
+    </bean>
+
+    <bean id="topicListenerSecond" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="destination" ref="destinationTopic"/>
+        <property name="pubSubDomain" value="true"/>
+        <property name="messageListener" ref="listenerViaTopicSecondClient"/>
+        <property name="subscriptionDurable" value="true"/>
+        <property name="durableSubscriptionName" value="1005001"/>
+        <property name="clientId" value="1005010"/>
+    </bean>
+
+
+    <bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="classesToBeBound" value="generated.Card"/>
+        <property name="schema" value="card.xsd"/>
+    </bean>
+
+    <bean class="reqs.MessageSenderViaQueue">
+        <constructor-arg index="0" ref="jmsQueueTemplate"/>
+    </bean>
+
+    <bean class="reqs.MessageSenderViaTopic">
+        <constructor-arg index="0" ref="jmsTopicTemplate"/>
     </bean>
 
 </beans>
