@@ -2,6 +2,7 @@ package reqs;
 
 import generated.Card;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
@@ -12,15 +13,15 @@ import java.io.StringWriter;
 
 public class MessageSenderViaQueue {
 
-    private final JmsTemplate jmsTemplate;
+    @Qualifier("jmsQueueTemplate")
+    @Autowired
+    private  JmsTemplate jmsTemplate;
 
     @Autowired
     private Jaxb2Marshaller marshaller;
 
 
-    public MessageSenderViaQueue(final JmsTemplate jmsTemplate) {
-        this.jmsTemplate = jmsTemplate;
-    }
+
 
     public void sendRequestToActivation(Card card) {
 

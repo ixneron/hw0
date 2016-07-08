@@ -18,7 +18,7 @@ public class Magic {
             TextMessage textMessage = (TextMessage) message;
             try {
                 Card card = (Card) marshaller.unmarshal(new StreamSource(new StringReader(textMessage.getText())));
-                logger.info("получено сообщение -- владелец карты : " + card.getCardOwner() + "- лимит :" + card.getCardLimit() + "- статус :" + card.getCardStatus() + " " + message.getJMSMessageID());
+                logger.info("получено сообщение || владелец карты : " + card.getCardOwner() + "|| лимит : " + card.getCardLimit() + "|| статус : " + card.getCardStatus() + " || " + message.getJMSMessageID());
             } catch (JMSException e) {
                 e.printStackTrace();
             }

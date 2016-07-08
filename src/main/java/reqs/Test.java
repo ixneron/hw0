@@ -11,13 +11,14 @@ import java.io.IOException;
 
 
 public class Test {
+
     private static DefaultMessageListenerContainer topicListenerFirst;
     private static DefaultMessageListenerContainer topicListenerSecond;
     private static DefaultMessageListenerContainer topicListenerNonDur;
 
     private static Logger logger = LoggerFactory.getLogger(Test.class);
-    private static ProcessBuilder processBuilderStart = new ProcessBuilder("cmd", "/C","start","C:/start.bat");
-    private static ProcessBuilder processBuilderStop = new ProcessBuilder("cmd", "/C","start","C:/stop.bat");
+    private static ProcessBuilder processBuilderStart = new ProcessBuilder("cmd", "/C","start","C:/JAVA/start.bat");
+    private static ProcessBuilder processBuilderStop = new ProcessBuilder("cmd", "/C","start","C:/JAVA/stop.bat");
 
     public static void main(String[] args) throws JAXBException, InterruptedException, IOException {
 
@@ -29,34 +30,40 @@ public class Test {
         topicListenerNonDur = (DefaultMessageListenerContainer) ctx.getBean("topicListenerNonDur");
 
         logger.info("поднялся контекст");
-        logger.info("==========================================================================================");
-        logger.info("тестируем первый сценарий (отправка в очередь и чтение + отправка в топик и чтение (2 подписчика)");
+        System.out.println("===================================================================================================================");
+        logger.info("тестируем первый сценарий (отправка в очередь и чтение + отправка в топик и чтение (2 подписчика) \n");
 
         testProducerAndConsumer(messageSenderViaQueue, messageSenderViaTopic);
 
-            Thread.sleep(2000);
+        Thread.sleep(2000);
 
-        logger.info("==========================================================================================");
-        logger.info("тестируем второй сценарий (отправка в топик, когда клиенты оффлайн (потеря сообщений)");
+        System.out.println("===================================================================================================================");
+        logger.info("тестируем второй сценарий (отправка в топик, когда клиенты оффлайн (потеря сообщений) \n");
         testOfflineConsumer(messageSenderViaTopic, ctx);
 
-            Thread.sleep(2000);
+        Thread.sleep(2000);
 
-        logger.info("==========================================================================================");
-        logger.info("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился");
+        System.out.println("===================================================================================================================");
+        logger.info("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился \n");
         testDurableConsumer(messageSenderViaTopic, ctx);
+
+        Thread.sleep(4000);
+
+        System.out.println("===================================================================================================================");
+        logger.info("теструем четвертый сценарий (отправка сообщение в очередь А, сразу после получения сообщения из очереди B  \n");
+        testResendFromQToQ(messageSenderViaQueue);
 
     }
 
     public static void testProducerAndConsumer (MessageSenderViaQueue messageSenderViaQueue, MessageSenderViaTopic messageSenderViaTopic) {
         Card queueCard = new Card();
         queueCard.setCardOwner("Alex - Queue");
-        queueCard.setCardStatus("N");
+        queueCard.setCardStatus("inactive");
         queueCard.setCardLimit(0);
 
         Card topicCard = new Card();
         topicCard.setCardOwner("Valera - Topic");
-        topicCard.setCardStatus("N");
+        topicCard.setCardStatus("inactive");
         topicCard.setCardLimit(0);
 
         logger.info("отправка запроса на чтение (queue)");
@@ -69,7 +76,7 @@ public class Test {
     public static void testDurableConsumer (MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) throws InterruptedException, IOException {
         Card topicCard = new Card();
         topicCard.setCardOwner("Alena - Topic");
-        topicCard.setCardStatus("N");
+        topicCard.setCardStatus("inactive");
         topicCard.setCardLimit(0);
 
         topicListenerFirst.stop();
@@ -77,12 +84,12 @@ public class Test {
         topicListenerNonDur.stop();
         logger.info("отключаем клиентов");
 
-            Thread.sleep(1000);
+        Thread.sleep(1000);
 
         logger.info("отправляем сообщение в топик");
-        //messageSenderViaTopic.sendRequestToActivation(topicCard);
+        messageSenderViaTopic.sendRequestToActivation(topicCard);
 
-        logger.info("перезапускаем ActiveMQ и стартуем слушателей, 2 из 3 подписчиков получат сообщения");
+        logger.info("перезапускаем ActiveMQ и стартуем слушателей, 2 из 3 подписчиков получат по 2 сообщения");
         processBuilderStop.start();
         Thread.sleep(3000);
 
@@ -99,9 +106,10 @@ public class Test {
     }
 
     public static void testOfflineConsumer(MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) throws InterruptedException, IOException {
+
         Card topicCard = new Card();
         topicCard.setCardOwner("Sasha - Topic");
-        topicCard.setCardStatus("N");
+        topicCard.setCardStatus("inactive");
         topicCard.setCardLimit(0);
 
         logger.info("отключаем клиентов");
@@ -112,17 +120,29 @@ public class Test {
         logger.info("отправляем сообщение");
         messageSenderViaTopic.sendRequestToActivation(topicCard);
 
-            Thread.sleep(1000);
+        Thread.sleep(1000);
 
         processBuilderStop.start();
         Thread.sleep(3000);
         Runtime.getRuntime().exec("taskkill /f /im cmd.exe") ;
         Thread.sleep(3000);
+
         processBuilderStart.start();
         logger.info("перезапускаем ActiveMQ и подключаем клиентов");
         Thread.sleep(7000);
 
         topicListenerNonDur.start();
         logger.info("вновь подключенные подписчики не получили сообщений");
+    }
+
+    public static void testResendFromQToQ(MessageSenderViaQueue messageSenderViaQueue) {
+
+        Card resendCard = new Card();
+        resendCard.setCardOwner("roma - resender");
+        resendCard.setCardStatus("inactive");
+        resendCard.setCardLimit(0);
+
+        messageSenderViaQueue.sendRequestToActivation(resendCard);
+
     }
 }
