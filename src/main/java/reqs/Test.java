@@ -31,28 +31,38 @@ public class Test {
 
         logger.info("поднялся контекст");
         System.out.println("===================================================================================================================");
-        logger.info("тестируем первый сценарий (отправка в очередь и чтение + отправка в топик и чтение (2 подписчика) \n");
+        System.out.println("тестируем первый сценарий (отправка в очередь и чтение + отправка в топик и чтение (2 подписчика)");
+        System.out.println("===================================================================================================================");
 
         testProducerAndConsumer(messageSenderViaQueue, messageSenderViaTopic);
 
         Thread.sleep(2000);
 
         System.out.println("===================================================================================================================");
-        logger.info("тестируем второй сценарий (отправка в топик, когда клиенты оффлайн (потеря сообщений) \n");
+        System.out.println("тестируем второй сценарий (отправка в топик, когда клиенты оффлайн (потеря сообщений)");
+        System.out.println("===================================================================================================================");
         testOfflineConsumer(messageSenderViaTopic, ctx);
 
         Thread.sleep(2000);
 
         System.out.println("===================================================================================================================");
-        logger.info("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился \n");
+        System.out.println("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился");
+        System.out.println("===================================================================================================================");
         testDurableConsumer(messageSenderViaTopic, ctx);
 
         Thread.sleep(4000);
 
         System.out.println("===================================================================================================================");
-        logger.info("теструем четвертый сценарий (отправка сообщение в очередь А, сразу после получения сообщения из очереди B  \n");
+        System.out.println("теструем четвертый сценарий (отправка сообщение в очередь А, сразу после получения сообщения из очереди B");
+        System.out.println("===================================================================================================================");
         testResendFromQToQ(messageSenderViaQueue);
 
+        Thread.sleep(2000);
+
+        System.out.println("===================================================================================================================");
+        System.out.println("тестируем пятый сценарий (откат транзакции)");
+        System.out.println("===================================================================================================================");
+        testTransact(messageSenderViaQueue);
     }
 
     public static void testProducerAndConsumer (MessageSenderViaQueue messageSenderViaQueue, MessageSenderViaTopic messageSenderViaTopic) {
@@ -144,5 +154,14 @@ public class Test {
 
         messageSenderViaQueue.sendRequestToActivation(resendCard);
 
+    }
+
+    public static void testTransact(MessageSenderViaQueue messageSenderViaQueue) {
+
+        Card trCard = new Card();
+        trCard.setCardOwner("katya-transaction");
+        trCard.setCardStatus("inactive");
+        trCard.setCardLimit(0);
+        messageSenderViaQueue.sendRequestToActivation(trCard);
     }
 }

@@ -29,13 +29,17 @@ public class MessageListenerViaQueue implements MessageListener {
         if (message instanceof TextMessage){
             TextMessage textMessage = (TextMessage) message;
             try {
-                if (textMessage.getText().contains("roma - resender")){
 
+                if (textMessage.getText().contains("roma - resender")){
                     logger.info("получено сообщение из первой очереди, оформляем посылку во вторую очередь + активируем");
                     sendToDoubleQueue(textMessage);
-
                 }
-                else Magic.createMagic(message, logger, marshaller);
+                else if (textMessage.getText().contains("katya-transaction")){
+                    if (true) {
+                        int[] mas = new int[5];
+                        mas[6] = 10;
+                    }
+                } else  Magic.createMagic(message, logger, marshaller);
 
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -55,6 +59,7 @@ public class MessageListenerViaQueue implements MessageListener {
             newMessage.setText(temp);
 
             return newMessage;
+
         });
     }
 }

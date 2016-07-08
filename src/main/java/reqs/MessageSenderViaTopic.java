@@ -38,24 +38,4 @@ public class MessageSenderViaTopic {
         return writer.toString();
     }
 
-//    public void sendDurableRequestToActivation(Card card) {
-//        try {
-//            Connection connection = jmsTemplate.getConnectionFactory().createConnection();
-//            connection.setClientID("100500");
-//            connection.start();
-//
-//            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-//
-//            TextMessage textMessage = session.createTextMessage();
-//            textMessage.setText(convertObjToXML(card));
-//
-//            MessageProducer producer = session.createProducer(jmsTemplate.getDefaultDestination());
-//            producer.send(textMessage);
-//
-//            session.close();
-//            connection.close();
-//        } catch (JMSException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

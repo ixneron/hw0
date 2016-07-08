@@ -10,9 +10,12 @@
     <context:annotation-config/>
     <context:component-scan base-package="reqs"/>
 
-
     <bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
         <constructor-arg index="0" value="tcp://192.168.148.130:61616"/>
+    </bean>
+
+    <bean id="transMan" class="org.springframework.jms.connection.JmsTransactionManager">
+        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
     </bean>
 
     <bean id="jmsQueueTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
@@ -50,7 +53,7 @@
     <bean id="listenerViaTopicNonDur" class="reqs.MessageListenerViaTopicNonDur"/>
     <bean id="listenerViaDoubleQueue" class="reqs.MessageListenerViaDoubleQueue"/>
 
-    <bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    <bean id="queueListener1" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
         <property name="connectionFactory" ref="activeMQConnectionFactory"/>
         <property name="destination" ref="destination2Queue"/>
         <property name="messageListener" ref="listenerViaDoubleQueue"/>
@@ -60,6 +63,7 @@
         <property name="connectionFactory" ref="activeMQConnectionFactory"/>
         <property name="destination" ref="destinationQueue"/>
         <property name="messageListener" ref="listenerViaQueue"/>
+        <property name="sessionTransacted" value="true"/>
     </bean>
 
     <bean id="topicListenerNonDur" class="org.springframework.jms.listener.DefaultMessageListenerContainer">

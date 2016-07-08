@@ -15,6 +15,7 @@ public class MessageListenerViaDoubleQueue implements MessageListener {
     @Autowired
     private Jaxb2Marshaller marshaller;
 
+
     @Override
     public void onMessage(Message message) {
         Magic.createMagic(message, logger, marshaller);
