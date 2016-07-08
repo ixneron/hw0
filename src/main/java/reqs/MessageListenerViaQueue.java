@@ -34,7 +34,7 @@ public class MessageListenerViaQueue implements MessageListener {
                     logger.info("получено сообщение из первой очереди, оформляем посылку во вторую очередь + активируем");
                     sendToDoubleQueue(textMessage);
                 }
-                else if (textMessage.getText().contains("katya-transaction")){
+                else if (textMessage.getText().contains("katya-transaction")){ //создает эксепшн для теста
                     if (true) {
                         int[] mas = new int[5];
                         mas[6] = 10;
@@ -59,7 +59,6 @@ public class MessageListenerViaQueue implements MessageListener {
             newMessage.setText(temp);
 
             return newMessage;
-
         });
     }
 }

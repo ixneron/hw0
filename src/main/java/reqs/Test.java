@@ -156,12 +156,13 @@ public class Test {
 
     }
 
-    public static void testTransact(MessageSenderViaQueue messageSenderViaQueue) {
+    public static void testTransact(MessageSenderViaQueue messageSenderViaQueue) throws InterruptedException {
 
         Card trCard = new Card();
         trCard.setCardOwner("katya-transaction");
         trCard.setCardStatus("inactive");
         trCard.setCardLimit(0);
+
         messageSenderViaQueue.sendRequestToActivation(trCard);
     }
 }
