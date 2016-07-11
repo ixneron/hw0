@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -47,6 +49,7 @@ public class MessageListenerViaQueue implements MessageListener {
         }
     }
 
+    @Transactional (propagation = Propagation.REQUIRED)
     private void sendToDoubleQueue(TextMessage textMessage) {
 
         jmsTemplate.send(session -> {

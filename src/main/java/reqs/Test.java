@@ -17,8 +17,6 @@ public class Test {
     private static DefaultMessageListenerContainer topicListenerNonDur;
 
     private static Logger logger = LoggerFactory.getLogger(Test.class);
-    private static ProcessBuilder processBuilderStart = new ProcessBuilder("cmd", "/C","start","C:/JAVA/start.bat");
-    private static ProcessBuilder processBuilderStop = new ProcessBuilder("cmd", "/C","start","C:/JAVA/stop.bat");
 
     public static void main(String[] args) throws JAXBException, InterruptedException, IOException {
 
@@ -46,11 +44,22 @@ public class Test {
         Thread.sleep(2000);
 
         System.out.println("===================================================================================================================");
-        System.out.println("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился");
+        System.out.println("старые сообщение :");
         System.out.println("===================================================================================================================");
+        topicListenerFirst.initialize();
+        topicListenerFirst.start();
+        topicListenerSecond.initialize();
+        topicListenerSecond.start();
+        Thread.sleep(1500);
+        System.out.println("===================================================================================================================");
+
+        Thread.sleep(2000);
+
+        System.out.println("тестируем третий сценарий (отправка в топик, когда клиент оффлайн и получение сообщения, когда клиент залогинился");
+        System.out.println("=================================================================================================================== ");
         testDurableConsumer(messageSenderViaTopic, ctx);
 
-        Thread.sleep(4000);
+        Thread.sleep(2000);
 
         System.out.println("===================================================================================================================");
         System.out.println("теструем четвертый сценарий (отправка сообщение в очередь А, сразу после получения сообщения из очереди B");
@@ -63,6 +72,9 @@ public class Test {
         System.out.println("тестируем пятый сценарий (откат транзакции)");
         System.out.println("===================================================================================================================");
         testTransact(messageSenderViaQueue);
+
+        Thread.sleep(2000);
+        System.exit(0);
     }
 
     public static void testProducerAndConsumer (MessageSenderViaQueue messageSenderViaQueue, MessageSenderViaTopic messageSenderViaTopic) {
@@ -90,8 +102,11 @@ public class Test {
         topicCard.setCardLimit(0);
 
         topicListenerFirst.stop();
+        topicListenerFirst.shutdown();
         topicListenerSecond.stop();
+        topicListenerSecond.shutdown();
         topicListenerNonDur.stop();
+        topicListenerNonDur.shutdown();
         logger.info("отключаем клиентов");
 
         Thread.sleep(1000);
@@ -99,20 +114,16 @@ public class Test {
         logger.info("отправляем сообщение в топик");
         messageSenderViaTopic.sendRequestToActivation(topicCard);
 
-        logger.info("перезапускаем ActiveMQ и стартуем слушателей, 2 из 3 подписчиков получат по 2 сообщения");
-        processBuilderStop.start();
-        Thread.sleep(3000);
-
-        Runtime.getRuntime().exec("taskkill /f /im cmd.exe") ;
-        Thread.sleep(3000);
-
-        processBuilderStart.start();
-        logger.info("запускается ActiveMQ ...");
-        Thread.sleep(7000);
-
-        topicListenerSecond.start();
+        topicListenerFirst.initialize();
         topicListenerFirst.start();
+        topicListenerSecond.initialize();
+        topicListenerSecond.start();
+        topicListenerNonDur.initialize();
         topicListenerNonDur.start();
+
+        Thread.sleep(1500);
+
+        logger.info("2 из 3 подписчиков получили сообщения.");
     }
 
     public static void testOfflineConsumer(MessageSenderViaTopic messageSenderViaTopic, ClassPathXmlApplicationContext ctx) throws InterruptedException, IOException {
@@ -123,24 +134,21 @@ public class Test {
         topicCard.setCardLimit(0);
 
         logger.info("отключаем клиентов");
+
         topicListenerFirst.stop();
+        topicListenerFirst.shutdown();
         topicListenerSecond.stop();
+        topicListenerSecond.shutdown();
         topicListenerNonDur.stop();
+        topicListenerNonDur.shutdown();
 
         logger.info("отправляем сообщение");
         messageSenderViaTopic.sendRequestToActivation(topicCard);
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
-        processBuilderStop.start();
-        Thread.sleep(3000);
-        Runtime.getRuntime().exec("taskkill /f /im cmd.exe") ;
-        Thread.sleep(3000);
 
-        processBuilderStart.start();
-        logger.info("перезапускаем ActiveMQ и подключаем клиентов");
-        Thread.sleep(7000);
-
+        topicListenerNonDur.initialize();
         topicListenerNonDur.start();
         logger.info("вновь подключенные подписчики не получили сообщений");
     }

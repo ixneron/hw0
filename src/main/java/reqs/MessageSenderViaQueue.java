@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jms.TextMessage;
 import javax.xml.transform.stream.StreamResult;
@@ -23,6 +25,7 @@ public class MessageSenderViaQueue {
 
 
 
+    @Transactional (propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void sendRequestToActivation(Card card) {
 
         jmsTemplate.send(session -> {

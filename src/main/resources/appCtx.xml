@@ -2,10 +2,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context.xsd">
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <context:annotation-config/>
     <context:component-scan base-package="reqs"/>
@@ -14,15 +17,27 @@
         <constructor-arg index="0" value="tcp://192.168.148.130:61616"/>
     </bean>
 
+    <bean id="xaFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
+        <property name="brokerURL" value="tcp://192.168.148.130:61616"/>
+    </bean>
+
+    <bean id="atomikosConnectionFactory" class="com.atomikos.jms.AtomikosConnectionFactoryBean">
+        <property name="xaConnectionFactory" ref="xaFactory"/>
+        <property name="uniqueResourceName" value="amQueue"/>
+    </bean>
+
+    <bean id="errorHandler" class="reqs.MyErrorHandler"/>
+
 <!-- JMS TEMPLATE -->
     <bean id="jmsQueueTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
-        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="connectionFactory" ref="atomikosConnectionFactory"/>
         <property name="receiveTimeout" value="1000"/>
         <property name="defaultDestination" ref="destinationQueue"/>
+        <property name="sessionTransacted" value="true"/>
     </bean>
 
     <bean id="jms2QueueTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
-        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="connectionFactory" ref="atomikosConnectionFactory"/>
         <property name="receiveTimeout" value="1000"/>
         <property name="defaultDestination" ref="destination2Queue"/>
     </bean>
@@ -64,15 +79,20 @@
     </bean>
 
     <bean id="queueListener1" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
-        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="connectionFactory" ref="atomikosConnectionFactory"/>
         <property name="destination" ref="destination2Queue"/>
         <property name="messageListener" ref="listenerViaDoubleQueue"/>
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="sessionTransacted" value="true"/>
     </bean>
 
     <bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
-        <property name="connectionFactory" ref="activeMQConnectionFactory"/>
+        <property name="connectionFactory" ref="atomikosConnectionFactory"/>
         <property name="destination" ref="destinationQueue"/>
         <property name="messageListener" ref="listenerViaQueue"/>
+        <property name="errorHandler" ref="errorHandler"/>
+
+        <property name="transactionManager" ref="transactionManager"/>
         <property name="sessionTransacted" value="true"/>
     </bean>
 
@@ -113,4 +133,40 @@
     <bean class="reqs.MessageSenderViaQueue"/>
     <bean class="reqs.MessageSenderViaTopic"/>
 
+    <bean id="setMyAtomikosSystemProps"
+          class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject">
+            <!-- System.getProperties() -->
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="java.lang.System" />
+                <property name="targetMethod" value="getProperties" />
+            </bean>
+        </property>
+        <property name="targetMethod" value="putAll" />
+        <property name="arguments">
+            <!-- The new Properties -->
+            <util:properties>
+                <!--<prop key="com.atomikos.icatch.file">/etc/myapp/jta.properties</prop>-->
+                <!--<prop key="com.atomikos.icatch.hide_init_file_path">true</prop>-->
+                <prop key="com.atomikos.icatch.registered">true</prop>
+            </util:properties>
+        </property>
+    </bean>
+
+<!-- настройка транзакций -->
+    <bean id="jtaTransactionManager" class="com.atomikos.icatch.jta.UserTransactionManager"
+    init-method="init" destroy-method="close">
+        <property name="forceShutdown" value="false"/>
+    </bean>
+
+    <bean id="jtaUserTransactionManager" class="com.atomikos.icatch.jta.UserTransactionImp">
+        <property name="transactionTimeout" value="300"/>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.transaction.jta.JtaTransactionManager">
+        <property name="transactionManager" ref="jtaTransactionManager"/>
+        <property name="userTransaction" ref="jtaUserTransactionManager"/>
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
 </beans>

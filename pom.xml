@@ -39,6 +39,26 @@
             <version>1.7.21</version>
         </dependency>
 
+        <!-- atomikos - jta -->
+        <dependency>
+            <groupId>com.atomikos</groupId>
+            <artifactId>transactions-jta</artifactId>
+            <version>4.0.4</version>
+        </dependency>
+
+        <!-- atomikos -jms -->
+        <dependency>
+            <groupId>com.atomikos</groupId>
+            <artifactId>transactions-jms</artifactId>
+            <version>4.0.4</version>
+        </dependency>
+
+        <!-- javax.transaction/jta -->
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>jta</artifactId>
+            <version>1.1</version>
+        </dependency>
 
         <!-- spring -->
         <dependency>
