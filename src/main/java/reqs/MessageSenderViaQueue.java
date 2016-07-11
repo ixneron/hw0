@@ -25,9 +25,9 @@ public class MessageSenderViaQueue {
 
 
 
-    @Transactional (propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
-    public void sendRequestToActivation(Card card) {
 
+    @Transactional (propagation = Propagation.REQUIRED)
+    public void sendRequestToActivation(Card card) {
         jmsTemplate.send(session -> {
             TextMessage textMessage = session.createTextMessage();
             textMessage.setText(convertObjToXML(card));

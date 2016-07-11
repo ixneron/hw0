@@ -82,6 +82,7 @@
         <property name="connectionFactory" ref="atomikosConnectionFactory"/>
         <property name="destination" ref="destination2Queue"/>
         <property name="messageListener" ref="listenerViaDoubleQueue"/>
+
         <property name="transactionManager" ref="transactionManager"/>
         <property name="sessionTransacted" value="true"/>
     </bean>

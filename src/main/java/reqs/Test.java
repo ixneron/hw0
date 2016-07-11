@@ -73,7 +73,7 @@ public class Test {
         System.out.println("===================================================================================================================");
         testTransact(messageSenderViaQueue);
 
-        Thread.sleep(2000);
+        Thread.sleep(11000);
         System.exit(0);
     }
 

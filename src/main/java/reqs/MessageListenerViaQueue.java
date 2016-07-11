@@ -53,7 +53,6 @@ public class MessageListenerViaQueue implements MessageListener {
     private void sendToDoubleQueue(TextMessage textMessage) {
 
         jmsTemplate.send(session -> {
-
             String temp = textMessage.getText();
             temp = temp.replaceFirst("<cardStatus>inactive</cardStatus>","<cardStatus>active</cardStatus>");
             temp = temp.replaceFirst("<cardLimit>0</cardLimit>", "<cardLimit>1000</cardLimit>");
