@@ -16,7 +16,7 @@
     <bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
         <constructor-arg index="0" value="tcp://192.168.148.130:61616"/>
     </bean>
-
+<!-- xa res1 -->
     <bean id="xaFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
         <property name="brokerURL" value="tcp://192.168.148.130:61616"/>
     </bean>
@@ -24,6 +24,15 @@
     <bean id="atomikosConnectionFactory" class="com.atomikos.jms.AtomikosConnectionFactoryBean">
         <property name="xaConnectionFactory" ref="xaFactory"/>
         <property name="uniqueResourceName" value="amQueue"/>
+    </bean>
+<!-- xa res2 -->
+    <bean id="xaFactory2" class="org.apache.activemq.ActiveMQXAConnectionFactory">
+        <property name="brokerURL" value="tcp://192.168.148.130:61616"/>
+    </bean>
+
+    <bean id="atomikosConnectionFactory2" class="com.atomikos.jms.AtomikosConnectionFactoryBean">
+        <property name="xaConnectionFactory" ref="xaFactory2"/>
+        <property name="uniqueResourceName" value="amQueue2"/>
     </bean>
 
     <bean id="errorHandler" class="reqs.MyErrorHandler"/>
@@ -37,7 +46,7 @@
     </bean>
 
     <bean id="jms2QueueTemplate" class="org.springframework.jms.core.JmsTemplate" scope="prototype">
-        <property name="connectionFactory" ref="atomikosConnectionFactory"/>
+        <property name="connectionFactory" ref="atomikosConnectionFactory2"/>
         <property name="receiveTimeout" value="1000"/>
         <property name="defaultDestination" ref="destination2Queue"/>
     </bean>
@@ -79,9 +88,10 @@
     </bean>
 
     <bean id="queueListener1" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
-        <property name="connectionFactory" ref="atomikosConnectionFactory"/>
+        <property name="connectionFactory" ref="atomikosConnectionFactory2"/>
         <property name="destination" ref="destination2Queue"/>
         <property name="messageListener" ref="listenerViaDoubleQueue"/>
+        <property name="errorHandler" ref="errorHandler"/>
 
         <property name="transactionManager" ref="transactionManager"/>
         <property name="sessionTransacted" value="true"/>
