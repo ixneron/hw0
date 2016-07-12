@@ -19,6 +19,7 @@
 <!-- xa res1 -->
     <bean id="xaFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
         <property name="brokerURL" value="tcp://192.168.148.130:61616"/>
+        <property name="redeliveryPolicy" ref="redeliveryPolicy"/>
     </bean>
 
     <bean id="atomikosConnectionFactory" class="com.atomikos.jms.AtomikosConnectionFactoryBean">
@@ -33,6 +34,13 @@
     <bean id="atomikosConnectionFactory2" class="com.atomikos.jms.AtomikosConnectionFactoryBean">
         <property name="xaConnectionFactory" ref="xaFactory2"/>
         <property name="uniqueResourceName" value="amQueue2"/>
+    </bean>
+
+    <bean id="redeliveryPolicy" class="org.apache.activemq.RedeliveryPolicy">
+        <property name="initialRedeliveryDelay" value="1000"/>
+        <property name="redeliveryDelay" value="1000"/>
+        <property name="maximumRedeliveries" value="0"/>
+        <property name="queue" value="ActiveMQ.DLQ"/>
     </bean>
 
     <bean id="errorHandler" class="reqs.MyErrorHandler"/>
