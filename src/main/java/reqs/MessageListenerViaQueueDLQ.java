@@ -19,7 +19,7 @@ public class MessageListenerViaQueueDLQ implements MessageListener {
     @Override
     public void onMessage(Message message) {
 
-        logger.info("перехватываем сообщение, которое не удалось доставить (ролбэк, 7 попыток редоставки)");
+        logger.info("перехватываем сообщение, которое не удалось доставить (rollback)");
         Magic.createMagic(message, logger, marshaller);
     }
 }

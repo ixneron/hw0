@@ -23,9 +23,6 @@ public class MessageSenderViaQueue {
     private Jaxb2Marshaller marshaller;
 
 
-
-
-
     @Transactional (propagation = Propagation.REQUIRED)
     public void sendRequestToActivation(Card card) {
         jmsTemplate.send(session -> {

@@ -35,7 +35,7 @@
         <property name="xaConnectionFactory" ref="xaFactory2"/>
         <property name="uniqueResourceName" value="amQueue2"/>
     </bean>
-
+<!-- redelivery policy -->
     <bean id="redeliveryPolicy" class="org.apache.activemq.RedeliveryPolicy">
         <property name="initialRedeliveryDelay" value="1000"/>
         <property name="redeliveryDelay" value="1000"/>
@@ -95,7 +95,8 @@
         <property name="messageListener" ref="listenerViaQueueDLQ"/>
     </bean>
 
-    <bean id="queueListener1" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+<!-- queue listeners -->
+    <bean id="doubleQueueListner" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
         <property name="connectionFactory" ref="atomikosConnectionFactory2"/>
         <property name="destination" ref="destination2Queue"/>
         <property name="messageListener" ref="listenerViaDoubleQueue"/>
@@ -105,7 +106,7 @@
         <property name="sessionTransacted" value="true"/>
     </bean>
 
-    <bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    <bean id="queueListener" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
         <property name="connectionFactory" ref="atomikosConnectionFactory"/>
         <property name="destination" ref="destinationQueue"/>
         <property name="messageListener" ref="listenerViaQueue"/>
@@ -114,7 +115,7 @@
         <property name="transactionManager" ref="transactionManager"/>
         <property name="sessionTransacted" value="true"/>
     </bean>
-
+<!-- topic listeners -->
     <bean id="topicListenerNonDur" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
         <property name="connectionFactory" ref="activeMQConnectionFactory"/>
         <property name="destination" ref="destinationTopic"/>
@@ -152,6 +153,7 @@
     <bean class="reqs.MessageSenderViaQueue"/>
     <bean class="reqs.MessageSenderViaTopic"/>
 
+<!-- atomikos sys. props -->
     <bean id="setMyAtomikosSystemProps"
           class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
         <property name="targetObject">
